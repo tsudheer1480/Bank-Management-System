@@ -134,6 +134,7 @@ class FastCash extends JFrame implements ActionListener {
                 int balance=0;
                 String Query1 ="SELECT * From transcations where pin='"+pinno+"'";
                 c.st.executeQuery(Query1);
+
                 ResultSet rs = c.st.getResultSet();
                 while (rs.next()) {
 
@@ -144,16 +145,22 @@ class FastCash extends JFrame implements ActionListener {
                             balance-=rs.getInt("amount");
                         }
                     }
+                if(balance <= 0){
+                    JOptionPane.showMessageDialog(null, "Insufficient Funds!\n"+"Balance: "+balance);
 
-                System.out.println(balance);
-                String query = "INSERT INTO transcations (pin, date, type, amount) VALUES (?, ?, ?, ?)";
-                PreparedStatement ps = c.c.prepareStatement(query);
-                ps.setString(1, pinno);
-                ps.setString(2, date.toString());  // or use SQL Date if your column is DATE type
-                ps.setString(3, "Withdrawal");
-                ps.setString(4, String.valueOf(amount));
-                ps.executeUpdate();
-                JOptionPane.showMessageDialog(null, "withdrawal Successfully");
+                }
+                else {
+
+                    String query = "INSERT INTO transcations (pin, date, type, amount) VALUES (?, ?, ?, ?)";
+                    PreparedStatement ps = c.c.prepareStatement(query);
+                    ps.setString(1, pinno);
+                    ps.setString(2, date.toString());  // or use SQL Date if your column is DATE type
+                    ps.setString(3, "Withdrawal");
+                    ps.setString(4, String.valueOf(amount));
+                    ps.executeUpdate();
+                    JOptionPane.showMessageDialog(null, "withdrawal Successfully");
+                    JOptionPane.showMessageDialog(null, "Insufficient Funds!\n"+"Balance: "+balance);
+                }
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
