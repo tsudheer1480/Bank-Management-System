@@ -220,7 +220,7 @@ class SignupPhaseThree extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(null, MessageFormat.format("Save credentials \nCard NO :{0}\nPin :{1}", formatted,  String.valueOf(pin)));
 
                 setVisible(false);
-                new Deposit(String.valueOf(pin)).setVisible(true);
+                new Login().setVisible(true);
                 }
             }
             catch(Exception ex){
@@ -256,10 +256,4 @@ class SignupPhaseThree extends JFrame implements ActionListener {
         }
         return service;
     }
-     static void main(String [] ignoredArgs){
-        new SignupPhaseThree("22553");
-}
-
-
-
 }

@@ -4,18 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 
 
 class SignPhaseTwo extends JFrame implements ActionListener {
 
     String formno;
     JTextField panNo,addharNo;
-    JComboBox religioncombobox;
-    JComboBox categorycombobox;
-    JComboBox incomecombobox;
-    JComboBox educationcombobox;
-    JComboBox occupationcombobox;
-    JTextField phoneNumber;
+    JComboBox<String>  religioncombobox;
+    JComboBox<String>  categorycombobox;
+    JComboBox<String> incomecombobox;
+    JComboBox<String>  educationcombobox;
+    JComboBox<String>  occupationcombobox;
     JRadioButton senioryes, seniorno;
     JRadioButton oldyes,oldno;
     JButton next;
@@ -34,7 +34,7 @@ class SignPhaseTwo extends JFrame implements ActionListener {
 
         String[] reli = {"select","Hindu", "Muslim", "Christian", "Sikh", "Buddhist", "Jain", "Other"};
 
-        religioncombobox = new JComboBox(reli);
+        religioncombobox = new JComboBox<>(reli);
         religioncombobox.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         religioncombobox.setBounds(275, 150, 400, 40);
         religioncombobox.setBackground(Color.white);
@@ -44,7 +44,7 @@ class SignPhaseTwo extends JFrame implements ActionListener {
         category.setBounds(100, 200, 200, 40);
 
         String[] categories = {"select","General", "OBC", "SC", "ST", "Other"};
-        categorycombobox = new JComboBox(categories);
+        categorycombobox = new JComboBox<>(categories);
         categorycombobox.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         categorycombobox.setBounds(275, 200, 400, 40);
         categorycombobox.setBackground(Color.white);
@@ -61,7 +61,7 @@ class SignPhaseTwo extends JFrame implements ActionListener {
                 "2,50,000 - 5,00,000",
                 "Above 5,00,000"
         };
-        incomecombobox = new JComboBox(incomes);
+        incomecombobox = new JComboBox<>(incomes);
         incomecombobox.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         incomecombobox.setBounds(275, 250, 400, 40);
         incomecombobox.setBackground(Color.white);
@@ -81,7 +81,7 @@ class SignPhaseTwo extends JFrame implements ActionListener {
                 "Doctrate",
                 "Others"
         };
-        educationcombobox = new JComboBox(education1);
+        educationcombobox = new JComboBox<>(education1);
         educationcombobox.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         educationcombobox.setBounds(275, 300, 400, 40);
         educationcombobox.setBackground(Color.white);
@@ -99,7 +99,7 @@ class SignPhaseTwo extends JFrame implements ActionListener {
                 "Retired",
                 "Others"
         };
-        occupationcombobox = new JComboBox(occupation1);
+        occupationcombobox = new JComboBox<>(occupation1);
         occupationcombobox.setFont(new Font("Times New Roman", Font.PLAIN, 22));
         occupationcombobox.setBounds(275, 350, 400, 40);
         occupationcombobox.setBackground(Color.white);
@@ -256,10 +256,19 @@ class SignPhaseTwo extends JFrame implements ActionListener {
             }
             else{
                 Conn c = new Conn();
-                String query ="Insert into signuptwo values('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')"
-                        .formatted(formno,religion,category,income,education,occupation,pannumber,addhar,senior,oldUser);
-
-                c.st.executeUpdate(query);
+                String query ="Insert into signuptwo values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement ps = c.c.prepareStatement(query);
+                ps.setString(1, formno);
+                ps.setString(2, religion);
+                ps.setString(3, category);
+                ps.setString(4, income);
+                ps.setString(5, education);
+                ps.setString(6, occupation);
+                ps.setString(7, pannumber);
+                ps.setString(8, addhar);
+                ps.setString(9, senior);
+                ps.setString(10, oldUser);
+                ps.executeUpdate();
                 setVisible(false);
                 new SignupPhaseThree(formno);
             }
@@ -271,9 +280,6 @@ class SignPhaseTwo extends JFrame implements ActionListener {
         }
 
         }
-//    public static void main(String[] args){
-//        new SignPhaseTwo("5425");
-//    }
     }
 
 

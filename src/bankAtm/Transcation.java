@@ -107,7 +107,6 @@ class Transcation extends JFrame implements ActionListener {
         setVisible(true);
     }
     public void actionPerformed(ActionEvent e) {
-        System.out.println(pinno);
         if(e.getSource() == exit){
             System.exit(0);
         }
@@ -122,7 +121,11 @@ class Transcation extends JFrame implements ActionListener {
                 new Withdrawal(pinno).setVisible(true);
         }
         else if(e.getSource() == ministatement){
-
+            try {
+                new MiniStatement(pinno).setVisible(true);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         }
         else if(e.getSource() == fastcash){
             System.out.println(pinno);
@@ -130,9 +133,19 @@ class Transcation extends JFrame implements ActionListener {
                 new FastCash(pinno).setVisible(true);
         }
         else if(e.getSource() == checkBalance){
-
+            // Ask for PIN confirmation
+            String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
+            if (enteredPin == null || !enteredPin.equals(pinno)) {
+                JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
+            }
+            else{
+                setVisible(false);
+                new BalanceEnquiry(pinno).setVisible(true);
+            }
         }
         else if(e.getSource() == pinchange){
+            setVisible(false);
+            new PinChange(pinno).setVisible(true);
 
         }
 
@@ -155,11 +168,6 @@ class Transcation extends JFrame implements ActionListener {
 
         return output;
     }
-    static void main(String[] ignoredArgs) {
-        new Transcation("1245");
-    }
-
-
 }
 class RoundedButton extends JButton {
     private final float alpha;   // transparency

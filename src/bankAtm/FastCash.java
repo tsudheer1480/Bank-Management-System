@@ -4,10 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static bankAtm.Transcation.makeRoundedTransparentImage;
 
 class FastCash extends JFrame implements ActionListener {
     JButton _10000, _500, _2000, _1000, _5000, _100, exit;
@@ -123,7 +124,11 @@ class FastCash extends JFrame implements ActionListener {
             amount = 5000;
         }
 
-            Date date = new Date();
+        Date date1 = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+        // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
+        String date = sdf.format(date1);
+
             String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
             if (enteredPin == null || !enteredPin.equals(pinno)) {
                 JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
@@ -132,65 +137,44 @@ class FastCash extends JFrame implements ActionListener {
             try {
                 Conn c = new Conn();
                 int balance=0;
-                String Query1 ="SELECT * From transcations where pin='"+pinno+"'";
-                c.st.executeQuery(Query1);
-
-                ResultSet rs = c.st.getResultSet();
-                while (rs.next()) {
-
-                        if(rs.getString("type").equals("Deposit")){
-                            balance+=rs.getInt("amount");
-                        }
-                        else if(rs.getString("type").equals("Withdrawal")){
-                            balance-=rs.getInt("amount");
-                        }
-                    }
-                if(balance <= 0){
-                    JOptionPane.showMessageDialog(null, "Insufficient Funds!\n"+"Balance: "+balance);
-
+                String query1 = "SELECT * FROM transactions WHERE pin = ?";
+                PreparedStatement pst = c.c.prepareStatement(query1);
+                pst.setString(1, pinno);   // safely set pin value
+                balance = Deposit.getBalance(balance, pst);
+                System.out.println(balance);
+                if(balance < amount){
+                    JOptionPane.showMessageDialog(null, STR."""
+Insufficient Funds!
+Balance: \{balance}""");
                 }
                 else {
-
-                    String query = "INSERT INTO transcations (pin, date, type, amount) VALUES (?, ?, ?, ?)";
+                    String query = "INSERT INTO transactions (pin, Date, type, Amount,balance) VALUES (?, ?, ?, ?,?)";
                     PreparedStatement ps = c.c.prepareStatement(query);
                     ps.setString(1, pinno);
-                    ps.setString(2, date.toString());  // or use SQL Date if your column is DATE type
+                    ps.setString(2, date);  // or use SQL Date if your column is DATE type
                     ps.setString(3, "Withdrawal");
                     ps.setString(4, String.valueOf(amount));
+                    ps.setInt(5, balance - amount);
                     ps.executeUpdate();
                     JOptionPane.showMessageDialog(null, "withdrawal Successfully");
-                    JOptionPane.showMessageDialog(null, "Insufficient Funds!\n"+"Balance: "+balance);
+                    int choice = JOptionPane.showConfirmDialog(
+                            null,
+                            "Do you want to check your balance?",
+                            "Balance Check",
+                            JOptionPane.YES_NO_OPTION
+                    );
+
+                    if (choice == JOptionPane.YES_OPTION) {
+                        JOptionPane.showMessageDialog(null, STR."Your Balance is: ₹\{balance - amount}");
+                    }
                 }
 
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                throw new RuntimeException();
             }
 
     }
-
-
-    public static Image makeRoundedTransparentImage(Image image, int width, int height, int cornerRadius, float alpha) {
-        // alpha = transparency (1.0 = fully visible, 0.0 = fully transparent)
-        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D g2 = output.createGraphics();
-        g2.setComposite(AlphaComposite.SrcOver.derive(alpha)); // 👈 transparency applied
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-        // Clip with rounded rectangle
-        g2.setClip(new java.awt.geom.RoundRectangle2D.Float(0, 0, width, height, cornerRadius, cornerRadius));
-        g2.drawImage(image, 0, 0, width, height, null);
-        g2.dispose();
-
-        return output;
-    }
-    static void main (String [] args) {
-        new FastCash("1245");
-    }
 }
-
-
 
 
 

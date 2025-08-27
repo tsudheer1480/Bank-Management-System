@@ -16,9 +16,4 @@ class Conn {
             System.out.println(e.getMessage());
         }
     }
-
-
-    public static void main(String[] args) throws SQLException {
-
-    }
 }

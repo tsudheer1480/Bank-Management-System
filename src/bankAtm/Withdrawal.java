@@ -6,6 +6,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
+
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Withdrawal extends JFrame implements ActionListener {
@@ -38,7 +40,7 @@ public class Withdrawal extends JFrame implements ActionListener {
         bgImage.setBounds(143, 174, 435, 292);
         imageLabel.add(bgImage);
 
-        JLabel t1 = new JLabel("Enter Amount to Witdraw");
+        JLabel t1 = new JLabel("Enter Amount to Withdraw");
         t1.setFont(new Font("Times New Roman", Font.BOLD, 18));
         t1.setForeground(Color.white);
         t1.setBounds(110, 30, 250, 30);
@@ -80,16 +82,30 @@ public class Withdrawal extends JFrame implements ActionListener {
         setLayout(null);
 
     }
+    static void main(String [] ignoredArgs){
+        new Withdrawal("755414");
+    }
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == witdrawal) {
             Conn c = new Conn();
             String cash = amount.getText();
-            Date date = new Date();
+            Date date1 = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+            // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
+            String date = sdf.format(date1);
+
             if(cash.isEmpty()){
                 JOptionPane.showMessageDialog(null, "Please enter an amount before proceeding.");
                 return;
             }
-            int cashi = Integer.parseInt(cash);
+            int cashi;
+            try{
+                cashi = Integer.parseInt(cash);
+            }
+            catch(Exception ex){
+                JOptionPane.showMessageDialog(null, "Invalid amount! Please enter a number.");
+                return;
+            }
             if (cashi <= 0) {
                 JOptionPane.showMessageDialog(null, "Please Enter Amount to withdraw");
             } else if ((cashi % 100) != 0) {
@@ -97,23 +113,48 @@ public class Withdrawal extends JFrame implements ActionListener {
             } else {
                 // Ask for PIN confirmation
                 String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
-                if (enteredPin == null || !enteredPin.equals(pinno)) {
+                if (enteredPin == null || ! (enteredPin.equals(pinno)) ) {
                     JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
-                    return;
                 }
-                try {
+                else {
+                    try {
+                        int balance=0;
+                        String Query1 ="SELECT * From transactions where pin=?";
+                        PreparedStatement pst = c.c.prepareStatement(Query1);
+                        pst.setString(1, pinno);
+                        pst.executeQuery();
+                        balance = Deposit.getBalance(balance, pst);
+                        if(cashi > balance){
+                            JOptionPane.showMessageDialog(null, STR."""
+                                                                                    Insufficient Funds!
+                                                                                    Balance: \{balance}""");
 
-                    String query = "INSERT INTO transcations (pin, date, type, amount) VALUES (?, ?, ?, ?)";
-                    PreparedStatement ps = c.c.prepareStatement(query);
-                    ps.setString(1, pinno);
-                    ps.setString(2, date.toString());  // or use SQL Date if your column is DATE type
-                    ps.setString(3, "Withdrawal");
-                    ps.setString(4, cash);
-                    ps.executeUpdate();
-                    JOptionPane.showMessageDialog(null, "witdrawal Successfully");
+                        }
+                        else  {
+                            String query = "INSERT INTO transactions (pin, Date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
+                            PreparedStatement ps = c.c.prepareStatement(query);
+                            ps.setString(1, pinno);
+                            ps.setString(2, date);  // or use SQL Date if your column is DATE type
+                            ps.setString(3, "Withdrawal");
+                            ps.setString(4, cash);
+                            ps.setInt(5, (balance-cashi));
+                            ps.executeUpdate();
+                            JOptionPane.showMessageDialog(null, "witdrawal Successfully");
+                            int choice = JOptionPane.showConfirmDialog(
+                                    null,
+                                    "Do you want to check your balance?",
+                                    "Balance Check",
+                                    JOptionPane.YES_NO_OPTION
+                            );
 
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+                            if (choice == JOptionPane.YES_OPTION) {
+                                JOptionPane.showMessageDialog(null, STR."Your Balance is: ₹\{balance - cashi}");
+                            }
+
+                        }
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
 
@@ -125,8 +166,5 @@ public class Withdrawal extends JFrame implements ActionListener {
 
     }
 
-    static void main (String [] ignoredArgs){
-        new Withdrawal("123");
-    }
 }
 

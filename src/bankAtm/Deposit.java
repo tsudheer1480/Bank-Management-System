@@ -6,6 +6,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Deposit extends JFrame implements ActionListener {
@@ -84,7 +87,11 @@ public class Deposit extends JFrame implements ActionListener {
         if (e.getSource() == deposit) {
             Conn c = new Conn();
             String cash = amount.getText();
-            Date date = new Date();
+            Date date1 = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+            // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
+            String date = sdf.format(date1);
+
             if(cash.isEmpty()){
                 JOptionPane.showMessageDialog(null, "Please enter an amount before proceeding.");
                 return;
@@ -94,22 +101,41 @@ public class Deposit extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Please Enter Amount to Deposit");
             } else if ((cashi % 100) != 0) {
                 JOptionPane.showMessageDialog(null, "Please Enter Amount in in multiples of 100! to Deposit");
-            } else {
+            }
+            else {
                 try {
                     // Ask for PIN confirmation
                     String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
                     if (enteredPin == null || !enteredPin.equals(pinno)) {
                         JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
-                        return;
                     }
-                    String query = "INSERT INTO transcations (pin, date, type, amount) VALUES (?, ?, ?, ?)";
-                    PreparedStatement ps = c.c.prepareStatement(query);
-                    ps.setString(1, pinno);
-                    ps.setString(2, date.toString());  // or use SQL Date if your column is DATE type
-                    ps.setString(3, "Deposit");
-                    ps.setString(4, cash);
-                    ps.executeUpdate();
-                    JOptionPane.showMessageDialog(null, "Deposited Successfully");
+                    else {
+                        int balance = 0;
+                        String Query1 = "SELECT * From transactions where pin= ?";
+                        PreparedStatement ps1 = c.c.prepareStatement(Query1);
+                        ps1.setString(1, pinno);
+                        balance = getBalance(balance, ps1)+cashi;
+
+                        String query = "INSERT INTO transactions (pin, date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
+                        PreparedStatement ps = c.c.prepareStatement(query);
+                        ps.setString(1, pinno);
+                        ps.setString(2, date);  // or use SQL Date if your column is DATE type
+                        ps.setString(3, "Deposit");
+                        ps.setString(4, cash);
+                        ps.setInt(5, balance);
+                        ps.executeUpdate();
+                        JOptionPane.showMessageDialog(null, "Deposited Successfully");
+                        int choice = JOptionPane.showConfirmDialog(
+                                null,
+                                "Do you want to check your balance?",
+                                "Balance Check",
+                                JOptionPane.YES_NO_OPTION
+                        );
+
+                        if (choice == JOptionPane.YES_OPTION) {
+                            JOptionPane.showMessageDialog(null, STR."Your Balance is: Rs.\{balance}");
+                        }
+                    }
 
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
@@ -124,8 +150,18 @@ public class Deposit extends JFrame implements ActionListener {
 
         }
 
-    static void main (String [] ignoredArgs){
-        new Deposit("123");
+    static int getBalance(int balance, PreparedStatement ps1) throws SQLException {
+        ResultSet rs = ps1.executeQuery();
+        while (rs.next()) {
+
+            if(rs.getString("type").equals("Deposit")){
+                balance+=rs.getInt("amount");
+            }
+            else if(rs.getString("type").equals("Withdrawal")){
+                balance-=rs.getInt("amount");
+            }
+        }
+        return balance;
     }
     }
 

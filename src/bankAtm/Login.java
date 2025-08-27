@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class Login extends JFrame implements ActionListener {
@@ -12,8 +13,6 @@ public class Login extends JFrame implements ActionListener {
     public JButton signup,clear,signin;
     JTextField card;
     JPasswordField pin;
-//    CardLayout cardframe;
-//    JPanel container;
 
     public Login() {
         // Title of the JFrame
@@ -121,10 +120,15 @@ public void actionPerformed(ActionEvent e) {
         if (e.getSource() == signin ) {
             String cardno=card.getText();
             String pinno=pin.getText();
-            Conn conn = new Conn();
-            String query ="select * from login where cardno='"+cardno+"' and pin='"+pinno+"'";
+
             try{
-                ResultSet rs =  conn.st.executeQuery(query);
+
+                Conn c = new Conn();
+                String query ="select * from login where cardno= ? and pin=?";
+                PreparedStatement pst = c.c.prepareStatement(query);
+                pst.setString(1, cardno);
+                pst.setString(2, pinno);
+                ResultSet rs = pst.executeQuery();
                 if(rs.next()){
                     setVisible(false);
                     new Transcation(pinno);
@@ -146,7 +150,7 @@ public void actionPerformed(ActionEvent e) {
             new SignPhase0ne().setVisible(true);
         }
 }
-    public static void main(String[] args) {
+    public static void main(String[] ignoredArgs) {
         // Start the application
         new Login();
     }

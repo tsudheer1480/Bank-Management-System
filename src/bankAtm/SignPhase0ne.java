@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 import java.util.Random;
 import com.toedter.calendar.JDateChooser;
 
@@ -20,7 +21,7 @@ class   SignPhase0ne extends JFrame implements ActionListener {
 
         Random rand = new Random();
         ran = Math.abs((rand.nextLong()%9000L )+1000L);
-        JLabel formno = new JLabel("APPLICATION NO . "+ ran);
+        JLabel formno = new JLabel(STR."APPLICATION NO . \{ran}");
         formno.setFont(new Font("Times New Roman", Font.BOLD, 28));
         formno.setBounds(220, 20, 500, 40);
 
@@ -146,6 +147,7 @@ class   SignPhase0ne extends JFrame implements ActionListener {
 
         phoneNumber = new JTextField();
         phoneNumber.setBounds(275, 650, 400, 40);
+        phoneNumber.setFont(new Font("Times New Roman", Font.BOLD, 22));
         add(phoneNumber);
 
 
@@ -254,9 +256,30 @@ class   SignPhase0ne extends JFrame implements ActionListener {
             }
             else{
                 Conn c  = new Conn();
-                String query = "insert into signup values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')"
-                        .formatted(formno, name, fname, dob, gender, email,phone, marital, addr, city, state, pincode);
-                c.st.executeUpdate(query);
+                String query = "INSERT INTO signup (formno, name, father_name, dob, gender, email, phonenumber, marital, address, city, state, pincode) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                PreparedStatement pst = c.c.prepareStatement(query);
+                pst.setString(1, formno);
+                pst.setString(2, name);
+                pst.setString(3, fname);
+                pst.setString(4, dob);
+                pst.setString(5, gender);
+                pst.setString(6, email);
+                pst.setString(7, phone);
+                pst.setString(8, marital);
+                pst.setString(9, addr);
+                pst.setString(10, city);
+                pst.setString(11, state);
+                pst.setString(12, pincode);
+
+                int rows = pst.executeUpdate();
+                if(rows > 0){
+                    JOptionPane.showMessageDialog(null, "Signup Successful");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Signup Failed");
+                }
+
 
                 setVisible(false);
                 new SignPhaseTwo(formno).setVisible(true);
@@ -269,8 +292,4 @@ class   SignPhase0ne extends JFrame implements ActionListener {
 
 
     }
-    static void main  (String[] args) {
-        new SignPhase0ne();
-    }
-
 }
