@@ -5,6 +5,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class PinChange extends JFrame implements ActionListener {
@@ -117,22 +118,21 @@ public class PinChange extends JFrame implements ActionListener {
                      JOptionPane.showMessageDialog(null, "Invalid OLD PIN! Operation cancelled.");
                      return;
                  }
-                 try{
-                     Conn  c = new Conn();
-                     String query1 = "UPDATE signupthree SET pin = ? WHERE pin = ?";
-                     PreparedStatement pst = c.c.prepareStatement(query1);
-                     pst.setString(1, newpin);
-                     pst.setString(2, oldpinno);
-                     int rows1 = pst.executeUpdate();
+                 String query1 = "UPDATE signupthree SET pin = ? WHERE pin = ?";
+                 String query2 = "UPDATE login SET pin = ? WHERE pin = ?";
+                 String query3= "UPDATE transactions SET pin = ? WHERE pin = ?";
+                 try (Connection conn = Conn.getConnection();
+                      PreparedStatement pst1 = conn.prepareStatement(query1)){
+                     pst1.setString(1, newpin);
+                     pst1.setString(2, oldpinno);
+                     int rows1 = pst1.executeUpdate();
 
-                     String query2 = "UPDATE login SET pin = ? WHERE pin = ?";
-                     PreparedStatement pst2 = c.c.prepareStatement(query2);
+                     PreparedStatement pst2 = conn.prepareStatement(query2);
                      pst2.setString(1, newpin);
                      pst2.setString(2, oldpinno);
                      int rows2 = pst2.executeUpdate();
 
-                     String query3= "UPDATE transactions SET pin = ? WHERE pin = ?";
-                     PreparedStatement pst3 =c.c.prepareStatement(query3);
+                     PreparedStatement pst3 = conn.prepareStatement(query3);
                      pst3.setString(1, newpin);
                      pst3.setString(2, oldpinno);
                      int rows3 = pst3.executeUpdate();

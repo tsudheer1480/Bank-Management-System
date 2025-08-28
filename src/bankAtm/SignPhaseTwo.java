@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 
@@ -232,47 +233,41 @@ class SignPhaseTwo extends JFrame implements ActionListener {
             oldUser = "No";
         }
 
-        try{
-            if(religion.equals("select")){
+        try {
+            if (religion.equals("select")) {
                 JOptionPane.showMessageDialog(null, "Please select a religion");
-            }
-            else if(category.equals("select")){
+            } else if (category.equals("select")) {
                 JOptionPane.showMessageDialog(null, "Please select a category");
-            }
-            else if(income.equals("select")){
+            } else if (income.equals("select")) {
                 JOptionPane.showMessageDialog(null, "Please select a income");
-            }
-            else if(education.equals("select")){
+            } else if (education.equals("select")) {
                 JOptionPane.showMessageDialog(null, "Please select a education");
-            }
-            else if(occupation.equals("select")){
+            } else if (occupation.equals("select")) {
                 JOptionPane.showMessageDialog(null, "Please select a occupation");
-            }
-            else if(addhar.length() != 12 || !(addhar.matches("\\d+"))){
-                    JOptionPane.showMessageDialog(null, "Please enter a vaild Addhar number");
-            }
-            else if(oldUser== (null)){
+            } else if (addhar.length() != 12 || !(addhar.matches("\\d+"))) {
+                JOptionPane.showMessageDialog(null, "Please enter a vaild Addhar number");
+            } else if (oldUser == (null)) {
                 JOptionPane.showMessageDialog(null, "Please select a  user type");
-            }
-            else{
-                Conn c = new Conn();
-                String query ="Insert into signuptwo values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement ps = c.c.prepareStatement(query);
-                ps.setString(1, formno);
-                ps.setString(2, religion);
-                ps.setString(3, category);
-                ps.setString(4, income);
-                ps.setString(5, education);
-                ps.setString(6, occupation);
-                ps.setString(7, pannumber);
-                ps.setString(8, addhar);
-                ps.setString(9, senior);
-                ps.setString(10, oldUser);
-                ps.executeUpdate();
-                setVisible(false);
-                new SignupPhaseThree(formno);
-            }
+            } else {
+                String query = "Insert into signuptwo values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                try (Connection conn = Conn.getConnection();
+                     PreparedStatement ps = conn.prepareStatement(query)) {
+                    ps.setString(1, formno);
+                    ps.setString(2, religion);
+                    ps.setString(3, category);
+                    ps.setString(4, income);
+                    ps.setString(5, education);
+                    ps.setString(6, occupation);
+                    ps.setString(7, pannumber);
+                    ps.setString(8, addhar);
+                    ps.setString(9, senior);
+                    ps.setString(10, oldUser);
+                    ps.executeUpdate();
+                    setVisible(false);
+                    new SignupPhaseThree(formno);
+                }
 
+            }
         }
 
         catch(Exception ex){

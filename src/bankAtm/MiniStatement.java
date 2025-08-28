@@ -12,11 +12,11 @@ public class MiniStatement extends JFrame {
         getContentPane().setBackground(new Color(255, 255, 255));
         setLocationRelativeTo(null);    // ✅ center on screen
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); // ✅ closes only this window, not entire app
+        String query = "SELECT Date, type, Amount, balance FROM transactions WHERE pin = ? ORDER BY date DESC LIMIT 15";
 
-        try {
-            Conn c = new Conn();
-            String query = "SELECT Date, type, Amount , balance FROM transactions WHERE pin = ? ORDER BY date DESC LIMIT 15";
-            PreparedStatement pst = c.c.prepareStatement(query);
+        try (Connection conn = Conn.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query)) {
+
             pst.setString(1, pinno);
             ResultSet rs = pst.executeQuery();
 
@@ -67,8 +67,7 @@ public class MiniStatement extends JFrame {
             add(new JScrollPane(table)); // ✅ Add table to JFrame
 
         } catch (Exception e) {
-           throw new RuntimeException();
+            throw new RuntimeException();
         }
     }
 }
-

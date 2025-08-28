@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -125,7 +126,7 @@ class FastCash extends JFrame implements ActionListener {
         }
 
         Date date1 = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm:ss");
         // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
         String date = sdf.format(date1);
 
@@ -134,22 +135,20 @@ class FastCash extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
                 return;
             }
-            try {
-                Conn c = new Conn();
-                int balance=0;
-                String query1 = "SELECT * FROM transactions WHERE pin = ?";
-                PreparedStatement pst = c.c.prepareStatement(query1);
+            int balance=0;
+            String query1 = "SELECT * FROM transactions WHERE pin = ?";
+        try (Connection conn = Conn.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query1)){
                 pst.setString(1, pinno);   // safely set pin value
                 balance = Deposit.getBalance(balance, pst);
-                System.out.println(balance);
                 if(balance < amount){
                     JOptionPane.showMessageDialog(null, STR."""
 Insufficient Funds!
 Balance: \{balance}""");
                 }
                 else {
-                    String query = "INSERT INTO transactions (pin, Date, type, Amount,balance) VALUES (?, ?, ?, ?,?)";
-                    PreparedStatement ps = c.c.prepareStatement(query);
+                    String query2 = "INSERT INTO transactions (pin, Date, type, Amount,balance) VALUES (?, ?, ?, ?,?)";
+                    PreparedStatement ps = conn.prepareStatement(query2);
                     ps.setString(1, pinno);
                     ps.setString(2, date);  // or use SQL Date if your column is DATE type
                     ps.setString(3, "Withdrawal");

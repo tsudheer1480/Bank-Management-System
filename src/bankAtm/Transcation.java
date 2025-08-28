@@ -122,7 +122,13 @@ class Transcation extends JFrame implements ActionListener {
         }
         else if(e.getSource() == ministatement){
             try {
+                String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
+                if (enteredPin == null || !enteredPin.equals(pinno)) {
+                    JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
+                }
+                else {
                 new MiniStatement(pinno).setVisible(true);
+                }
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

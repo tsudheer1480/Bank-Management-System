@@ -5,6 +5,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -88,7 +89,7 @@ public class Deposit extends JFrame implements ActionListener {
             Conn c = new Conn();
             String cash = amount.getText();
             Date date1 = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm:ss");
             // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
             String date = sdf.format(date1);
 
@@ -111,29 +112,31 @@ public class Deposit extends JFrame implements ActionListener {
                     }
                     else {
                         int balance = 0;
-                        String Query1 = "SELECT * From transactions where pin= ?";
-                        PreparedStatement ps1 = c.c.prepareStatement(Query1);
-                        ps1.setString(1, pinno);
-                        balance = getBalance(balance, ps1)+cashi;
+                        String query1 = "SELECT * From transactions where pin= ?";
+                        String query2 = "INSERT INTO transactions (pin, date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
+                        try (Connection conn = Conn.getConnection();
+                             PreparedStatement ps1 = conn.prepareStatement(query1)) {
+                            ps1.setString(1, pinno);
+                            balance = getBalance(balance, ps1) + cashi;
 
-                        String query = "INSERT INTO transactions (pin, date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
-                        PreparedStatement ps = c.c.prepareStatement(query);
-                        ps.setString(1, pinno);
-                        ps.setString(2, date);  // or use SQL Date if your column is DATE type
-                        ps.setString(3, "Deposit");
-                        ps.setString(4, cash);
-                        ps.setInt(5, balance);
-                        ps.executeUpdate();
-                        JOptionPane.showMessageDialog(null, "Deposited Successfully");
-                        int choice = JOptionPane.showConfirmDialog(
-                                null,
-                                "Do you want to check your balance?",
-                                "Balance Check",
-                                JOptionPane.YES_NO_OPTION
-                        );
+                            PreparedStatement ps = conn.prepareStatement(query2);
+                            ps.setString(1, pinno);
+                            ps.setString(2, date);  // or use SQL Date if your column is DATE type
+                            ps.setString(3, "Deposit");
+                            ps.setString(4, cash);
+                            ps.setInt(5, balance);
+                            ps.executeUpdate();
+                            JOptionPane.showMessageDialog(null, "Deposited Successfully");
+                            int choice = JOptionPane.showConfirmDialog(
+                                    null,
+                                    "Do you want to check your balance?",
+                                    "Balance Check",
+                                    JOptionPane.YES_NO_OPTION
+                            );
 
-                        if (choice == JOptionPane.YES_OPTION) {
-                            JOptionPane.showMessageDialog(null, STR."Your Balance is: Rs.\{balance}");
+                            if (choice == JOptionPane.YES_OPTION) {
+                                JOptionPane.showMessageDialog(null, STR."Your Balance is: Rs.\{balance}");
+                            }
                         }
                     }
 

@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.text.MessageFormat;
 import java.util.*;
@@ -185,42 +186,37 @@ class SignupPhaseThree extends JFrame implements ActionListener {
             }
 
             String service = getString();
-            try{
-                if(service.isEmpty()){
-                    JOptionPane.showMessageDialog(null,"Please Select services");
-                }
-                else if(!ch7.isSelected()){
-                    JOptionPane.showMessageDialog(null,"check terms and conditions");
-                }
-                else  if(acc.isEmpty()){
-                    JOptionPane.showMessageDialog(null,"Please Select Account");
-                }
-                else{
-                Conn co = new Conn();
+            try {
+                if (service.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Please Select services");
+                } else if (!ch7.isSelected()) {
+                    JOptionPane.showMessageDialog(null, "check terms and conditions");
+                } else if (acc.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Please Select Account");
+                } else {
                     String query1 = "INSERT INTO signupthree(formno, cardno, pin, account_type, service) VALUES (?, ?, ?, ?, ?)";
-                    PreparedStatement ps = co.c.prepareStatement(query1);
-                    ps.setString(1, formno);
-                    ps.setString(2, String.valueOf(cardno));
-                    ps.setString(3, String.valueOf(pin));
-                    ps.setString(4, acc);
-                    ps.setString(5, service);
+                    String query2 = "INSERT INTO login(formno,cardno,pin) VALUES (?,?,?)";
 
+                    try (Connection conn = Conn.getConnection();
+                         PreparedStatement ps = conn.prepareStatement(query1)) {
+                        ps.setString(1, formno);
+                        ps.setString(2, String.valueOf(cardno));
+                        ps.setString(3, String.valueOf(pin));
+                        ps.setString(4, acc);
+                        ps.setString(5, service);
+                        ps.executeUpdate();
 
+                        PreparedStatement ps2 = conn.prepareStatement(query2);
+                        ps2.setString(1, formno);
+                        ps2.setString(2, String.valueOf(cardno));
+                        ps2.setString(3, String.valueOf(pin));
+                        ps2.executeUpdate();
+                        JOptionPane.showMessageDialog(null, "Account Created");
+                        JOptionPane.showMessageDialog(null, MessageFormat.format("Save credentials \nCard NO :{0}\nPin :{1}", formatted, String.valueOf(pin)));
 
-
-                    ps.executeUpdate();
-
-                    String query2= "INSERT INTO login(formno,cardno,pin) VALUES (?,?,?)";
-                    PreparedStatement ps2 = co.c.prepareStatement(query2);
-                    ps2.setString(1, formno);
-                    ps2.setString(2, String.valueOf(cardno));
-                    ps2.setString(3, String.valueOf(pin));
-                    ps2.executeUpdate();
-                JOptionPane.showMessageDialog(null,"Account Created");
-                JOptionPane.showMessageDialog(null, MessageFormat.format("Save credentials \nCard NO :{0}\nPin :{1}", formatted,  String.valueOf(pin)));
-
-                setVisible(false);
-                new Login().setVisible(true);
+                        setVisible(false);
+                        new Login().setVisible(true);
+                    }
                 }
             }
             catch(Exception ex){

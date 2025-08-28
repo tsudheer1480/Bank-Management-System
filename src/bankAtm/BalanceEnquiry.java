@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class BalanceEnquiry extends JFrame implements ActionListener {
@@ -49,13 +50,10 @@ public class BalanceEnquiry extends JFrame implements ActionListener {
         back.addActionListener(this);
         bgImage.add(back);
 
-        Conn c = new Conn();
-        try {
-
-
-                int balance = 0;
-                String Query1 = "SELECT * From transactions where pin= ? ";
-                PreparedStatement pst = c.c.prepareStatement(Query1);
+        String query = "SELECT * From transactions where pin= ? ";
+        int balance = 0;
+        try (Connection conn = Conn.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query)) {
                 pst.setString(1, pinno);
                balance=Deposit.getBalance(balance, pst);
                t1.setText(STR."Your Balance is Rs.\{balance}");

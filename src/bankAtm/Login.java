@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -121,25 +122,25 @@ public void actionPerformed(ActionEvent e) {
             String cardno=card.getText();
             String pinno=pin.getText();
 
-            try{
+        String query ="select * from login where cardno= ? and pin=?";
 
-                Conn c = new Conn();
-                String query ="select * from login where cardno= ? and pin=?";
-                PreparedStatement pst = c.c.prepareStatement(query);
-                pst.setString(1, cardno);
-                pst.setString(2, pinno);
-                ResultSet rs = pst.executeQuery();
-                if(rs.next()){
-                    setVisible(false);
-                    new Transcation(pinno);
-                }
-                else{
-                    JOptionPane.showMessageDialog(null,"INVALID CARD NO OR PIN NO");
-                }
-            }
-            catch(Exception ex){
-                JOptionPane.showMessageDialog(null,ex.getMessage(),"ERROR",JOptionPane.ERROR_MESSAGE);
-            }
+        try (Connection conn = Conn.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query)){
+            pst.setString(1, cardno);
+            pst.setString(2, pinno);
+            ResultSet rs = pst.executeQuery();
+
+        if(rs.next()){
+            setVisible(false);
+            new Transcation(pinno);
+        }
+        else{
+            JOptionPane.showMessageDialog(null,"INVALID CARD NO OR PIN NO");
+        }
+
+        }catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
         }
         else if (e.getSource() == clear) {
                 card.setText("");
@@ -147,7 +148,7 @@ public void actionPerformed(ActionEvent e) {
         }
         else  if (e.getSource() == signup) {
             setVisible(false);
-            new SignPhase0ne().setVisible(true);
+            new SignPhaseOne().setVisible(true);
         }
 }
     public static void main(String[] ignoredArgs) {

@@ -4,19 +4,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Random;
 import com.toedter.calendar.JDateChooser;
 
 
-class   SignPhase0ne extends JFrame implements ActionListener {
+class SignPhaseOne extends JFrame implements ActionListener {
     long ran;
     JTextField nametextfield,phoneNumber,fathernametextfield,emailtextfiels,addresstextfield,citytextfield,statetextfield,pincodetextfield;
     JDateChooser datebirth;
     JRadioButton male,female;
     JRadioButton married,unmarried,other;
     JButton next;
-    SignPhase0ne() {
+    SignPhaseOne() {
         setTitle("Sign Phase 1 ");
 
         Random rand = new Random();
@@ -229,62 +230,54 @@ class   SignPhase0ne extends JFrame implements ActionListener {
         String pincode = pincodetextfield.getText();
         String phone =phoneNumber.getText();
 
-        try{
-            if(name.isEmpty()){
+        try {
+            if (name.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please enter your name");
-            }
-            else if(fname.isEmpty()){
+            } else if (fname.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please enter your father's name");
-            }
-            else if(dob.isEmpty()){
+            } else if (dob.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please enter your Date of Birth");
-            }
-            else if(address == null){
+            } else if (address == null) {
                 JOptionPane.showMessageDialog(null, "Please enter your Address");
-            }
-            else if(gender == (null)){
+            } else if (gender == (null)) {
                 JOptionPane.showMessageDialog(null, "Please select your gender");
-            }
-            else if(email.isEmpty()){
+            } else if (email.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please enter your Email");
-            }
-            else if(marital == null){
+            } else if (marital == null) {
                 JOptionPane.showMessageDialog(null, "Please select your marital");
-            }
-            else if(phone.length() != 10){
+            } else if (phone.length() != 10) {
                 JOptionPane.showMessageDialog(null, "Please enter a valid phone number");
-            }
-            else{
-                Conn c  = new Conn();
+            } else {
                 String query = "INSERT INTO signup (formno, name, father_name, dob, gender, email, phonenumber, marital, address, city, state, pincode) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                try (Connection conn = Conn.getConnection();
+                     PreparedStatement pst = conn.prepareStatement(query)) {
+                    pst.setString(1, formno);
+                    pst.setString(2, name);
+                    pst.setString(3, fname);
+                    pst.setString(4, dob);
+                    pst.setString(5, gender);
+                    pst.setString(6, email);
+                    pst.setString(7, phone);
+                    pst.setString(8, marital);
+                    pst.setString(9, addr);
+                    pst.setString(10, city);
+                    pst.setString(11, state);
+                    pst.setString(12, pincode);
 
-                PreparedStatement pst = c.c.prepareStatement(query);
-                pst.setString(1, formno);
-                pst.setString(2, name);
-                pst.setString(3, fname);
-                pst.setString(4, dob);
-                pst.setString(5, gender);
-                pst.setString(6, email);
-                pst.setString(7, phone);
-                pst.setString(8, marital);
-                pst.setString(9, addr);
-                pst.setString(10, city);
-                pst.setString(11, state);
-                pst.setString(12, pincode);
+                    int rows = pst.executeUpdate();
+                    if (rows > 0) {
+                        JOptionPane.showMessageDialog(null, "Signup Successful");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Signup Failed");
+                    }
 
-                int rows = pst.executeUpdate();
-                if(rows > 0){
-                    JOptionPane.showMessageDialog(null, "Signup Successful");
-                } else {
-                    JOptionPane.showMessageDialog(null, "Signup Failed");
+
+                    setVisible(false);
+                    new SignPhaseTwo(formno).setVisible(true);
                 }
 
-
-                setVisible(false);
-                new SignPhaseTwo(formno).setVisible(true);
             }
-
         }
         catch(Exception ex){
             System.out.println(ex.getMessage());

@@ -5,6 +5,7 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import java.text.SimpleDateFormat;
@@ -90,7 +91,7 @@ public class Withdrawal extends JFrame implements ActionListener {
             Conn c = new Conn();
             String cash = amount.getText();
             Date date1 = new Date();
-            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm:ss");
             // dd -> day, E -> short weekday, yyyy -> year, HH:mm -> 24hr time
             String date = sdf.format(date1);
 
@@ -117,13 +118,13 @@ public class Withdrawal extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
                 }
                 else {
-                    try {
+                        String query ="SELECT * From transactions where pin=?";
                         int balance=0;
-                        String Query1 ="SELECT * From transactions where pin=?";
-                        PreparedStatement pst = c.c.prepareStatement(Query1);
-                        pst.setString(1, pinno);
-                        pst.executeQuery();
-                        balance = Deposit.getBalance(balance, pst);
+                    try (Connection conn = Conn.getConnection();
+                         PreparedStatement pst1 = conn.prepareStatement(query)) {
+                        pst1.setString(1, pinno);
+                        pst1.executeQuery();
+                        balance = Deposit.getBalance(balance, pst1);
                         if(cashi > balance){
                             JOptionPane.showMessageDialog(null, STR."""
                                                                                     Insufficient Funds!
@@ -131,14 +132,14 @@ public class Withdrawal extends JFrame implements ActionListener {
 
                         }
                         else  {
-                            String query = "INSERT INTO transactions (pin, Date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
-                            PreparedStatement ps = c.c.prepareStatement(query);
-                            ps.setString(1, pinno);
-                            ps.setString(2, date);  // or use SQL Date if your column is DATE type
-                            ps.setString(3, "Withdrawal");
-                            ps.setString(4, cash);
-                            ps.setInt(5, (balance-cashi));
-                            ps.executeUpdate();
+                            String query2 = "INSERT INTO transactions (pin, Date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
+                            PreparedStatement pst2 = conn.prepareStatement(query2);
+                            pst2.setString(1, pinno);
+                            pst2.setString(2, date);  // or use SQL Date if your column is DATE type
+                            pst2.setString(3, "Withdrawal");
+                            pst2.setString(4, cash);
+                            pst2.setInt(5, (balance-cashi));
+                            pst2.executeUpdate();
                             JOptionPane.showMessageDialog(null, "witdrawal Successfully");
                             int choice = JOptionPane.showConfirmDialog(
                                     null,
