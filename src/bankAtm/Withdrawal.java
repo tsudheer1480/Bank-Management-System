@@ -80,10 +80,6 @@ public class Withdrawal extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    public static void main(String[] args) {
-        new Withdrawal("755414");
-    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == withdrawalBtn) {
@@ -144,9 +140,11 @@ public class Withdrawal extends JFrame implements ActionListener {
             }
 
             // ✅ Check balance
-            int balance = Deposit.getBalance(0, conn.prepareStatement("SELECT * FROM transactions WHERE cardno = '" + cardno + "'"));
+            int balance = Deposit.getBalance(0, conn.prepareStatement(STR."SELECT * FROM transactions WHERE cardno = '\{cardno}'"));
             if (amount > balance) {
-                JOptionPane.showMessageDialog(null, "Insufficient Funds!\nAvailable Balance: ₹" + balance);
+                JOptionPane.showMessageDialog(null, STR."""
+Insufficient Funds!
+Available Balance: ₹\{balance}""");
                 return;
             }
 
@@ -176,14 +174,14 @@ public class Withdrawal extends JFrame implements ActionListener {
             );
 
             if (choice == JOptionPane.YES_OPTION) {
-                JOptionPane.showMessageDialog(null, "Your Balance is: ₹" + newBalance);
+                JOptionPane.showMessageDialog(null, STR."Your Balance is: ₹\{newBalance}");
             }
 
             setVisible(false);
             new Transcation(cardno).setVisible(true);
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(null, STR."Error: \{ex.getMessage()}");
         }
     }
 }

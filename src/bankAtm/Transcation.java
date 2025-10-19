@@ -286,9 +286,4 @@ class RoundedButton extends JButton {
         // Draw the button text
         super.paintComponent(g);
     }
-
-    public static void main(String args[]){
-        new Transcation("5348951939157680");
-    }
-
 }

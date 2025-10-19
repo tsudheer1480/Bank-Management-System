@@ -47,11 +47,11 @@ public class MiniStatement extends JFrame {
             }
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage(),
+            JOptionPane.showMessageDialog(this, STR."Database Error: \{e.getMessage()}",
                     "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace(); // For debugging — remove in production
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Unexpected Error: " + e.getMessage(),
+            JOptionPane.showMessageDialog(this, STR."Unexpected Error: \{e.getMessage()}",
                     "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
@@ -92,7 +92,7 @@ public class MiniStatement extends JFrame {
         // Add Close button at bottom
         JButton closeButton = new JButton("Close");
         closeButton.setFont(new Font("Arial", Font.BOLD, 14));
-        closeButton.addActionListener(e -> dispose());
+        closeButton.addActionListener(_ -> dispose());
 
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(closeButton);
