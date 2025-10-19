@@ -1,16 +1,21 @@
 package bankAtm;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 class Transcation extends JFrame implements ActionListener {
     JButton checkBalance,withdrawal,ministatement,fastcash,pinchange,deposit,exit;
-    String pinno;
-    Transcation(String pinno) {
-        this.pinno=pinno;
+    String cardno;
+    Transcation(String cardno) {
+        this.cardno= cardno;
         setSize(845, 850);
         setLocation(375, 5);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // for proper exit
@@ -111,47 +116,83 @@ class Transcation extends JFrame implements ActionListener {
             System.exit(0);
         }
         else if(e.getSource() == deposit){
-            System.out.println(pinno);
                 setVisible(false);
-                new Deposit(pinno).setVisible(true);
+                new Deposit(cardno).setVisible(true);
         }
         else if(e.getSource() == withdrawal){
-            System.out.println(pinno);
+            System.out.println(cardno);
                 setVisible(false);
-                new Withdrawal(pinno).setVisible(true);
+                new Withdrawal(cardno).setVisible(true);
         }
         else if(e.getSource() == ministatement){
-            try {
-                String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
-                if (enteredPin == null || !enteredPin.equals(pinno)) {
-                    JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
+            String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
+            if (enteredPin == null || enteredPin.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "PIN cannot be empty!");
+                return;
+            }
+
+            try (Connection conn = Conn.getConnection()) {
+                // ✅ Verify PIN using BCrypt
+                String queryPin = "SELECT pin FROM login WHERE cardno = ?";
+                try (PreparedStatement pst = conn.prepareStatement(queryPin)) {
+                    pst.setString(1, cardno);
+                    ResultSet rs = pst.executeQuery();
+                    if (rs.next()) {
+                        String storedHash = rs.getString("pin");
+                        if (!BCrypt.checkpw(enteredPin, storedHash)) {
+                            JOptionPane.showMessageDialog(null, "Incorrect PIN! Transaction cancelled.");
+                            return;
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Card not found.");
+                        return;
+                    }
                 }
-                else {
-                new MiniStatement(pinno).setVisible(true);
-                }
+                new MiniStatement(cardno).setVisible(true);
+
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         }
         else if(e.getSource() == fastcash){
-            System.out.println(pinno);
+            System.out.println(cardno);
                 setVisible(false);
-                new FastCash(pinno).setVisible(true);
+                new FastCash(cardno).setVisible(true);
         }
         else if(e.getSource() == checkBalance){
-            // Ask for PIN confirmation
             String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
-            if (enteredPin == null || !enteredPin.equals(pinno)) {
-                JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
+            if (enteredPin == null || enteredPin.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "PIN cannot be empty!");
+                return;
             }
-            else{
+
+            try (Connection conn = Conn.getConnection()) {
+                // ✅ Verify PIN using BCrypt
+                String queryPin = "SELECT pin FROM login WHERE cardno = ?";
+                try (PreparedStatement pst = conn.prepareStatement(queryPin)) {
+                    pst.setString(1, cardno);
+                    ResultSet rs = pst.executeQuery();
+                    if (rs.next()) {
+                        String storedHash = rs.getString("pin");
+                        if (!BCrypt.checkpw(enteredPin, storedHash)) {
+                            JOptionPane.showMessageDialog(null, "Incorrect PIN! Transaction cancelled.");
+                            return;
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Card not found.");
+                        return;
+                    }
+                }
                 setVisible(false);
-                new BalanceEnquiry(pinno).setVisible(true);
+                new BalanceEnquiry(cardno).setVisible(true);
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
         }
         else if(e.getSource() == pinchange){
             setVisible(false);
-            new PinChange(pinno).setVisible(true);
+            new PinChange(cardno).setVisible(true);
 
         }
 
@@ -244,6 +285,10 @@ class RoundedButton extends JButton {
 
         // Draw the button text
         super.paintComponent(g);
+    }
+
+    public static void main(String args[]){
+        new Transcation("5348951939157680");
     }
 
 }

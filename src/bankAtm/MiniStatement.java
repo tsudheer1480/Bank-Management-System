@@ -6,68 +6,96 @@ import java.awt.*;
 import java.sql.*;
 
 public class MiniStatement extends JFrame {
-    public MiniStatement(String pinno) {
+
+    public MiniStatement(String cardno) {
         setTitle("Mini Statement");
-        setSize(600, 600);// window size
-        getContentPane().setBackground(new Color(255, 255, 255));
-        setLocationRelativeTo(null);    // ✅ center on screen
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE); // ✅ closes only this window, not entire app
-        String query = "SELECT Date, type, Amount, balance FROM transactions WHERE pin = ? ORDER BY date DESC LIMIT 15";
+        setSize(600, 600);
+        getContentPane().setBackground(Color.WHITE);
+        setLocationRelativeTo(null); // center on screen
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // Table model setup
+        String[] columnNames = {"Date", "Type", "Amount", "Balance"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        JTable table = new JTable(model);
+
+        // Improved query (consistent case)
+        String query = "SELECT date, type, amount, balance FROM transactions WHERE cardno = ? ORDER BY date DESC LIMIT 15";
 
         try (Connection conn = Conn.getConnection();
              PreparedStatement pst = conn.prepareStatement(query)) {
 
-            pst.setString(1, pinno);
-            ResultSet rs = pst.executeQuery();
+            pst.setString(1, cardno);
+            try (ResultSet rs = pst.executeQuery()) {
 
-            String[] columnNames = {"Date", "Type", "Amount", "Balance"};
-            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-            while (rs.next()) {
-                Object[] row = {
-                        rs.getString("date"),
-                        rs.getString("type"),
-                        rs.getDouble("amount"),
-                        rs.getInt("balance")
-                };
-                model.addRow(row);
+                boolean hasData = false;
+                while (rs.next()) {
+                    hasData = true;
+                    Object[] row = {
+                            rs.getString("date"),
+                            rs.getString("type"),
+                            rs.getDouble("amount"),
+                            rs.getInt("balance")
+                    };
+                    model.addRow(row);
+                }
+
+                if (!hasData) {
+                    JOptionPane.showMessageDialog(this, "No transactions found for this account.",
+                            "Info", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
 
-            JTable table = new JTable(model) {
-
-
-                @Override
-                public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
-                    Component c = super.prepareRenderer(renderer, row, column);
-
-                    String type = getValueAt(row, 1).toString(); // "Deposit" or "Withdrawal"
-
-                    if (type.equalsIgnoreCase("Deposit")) {
-                        c.setBackground(new Color(230, 255, 230));
-                        c.setFont(new Font("raleway", Font.PLAIN, 14));// light green for entire row
-                        c.setForeground(Color.BLACK);
-                    } else if (type.equalsIgnoreCase("Withdrawal")) {
-                        c.setBackground(new Color(255, 230, 230)); // light red for entire row
-                        c.setFont(new Font("raleway", Font.PLAIN, 14));
-                        c.setForeground(Color.BLACK);
-                    } else {
-                        c.setBackground(Color.WHITE); // default background
-                        c.setFont(new Font("raleway", Font.PLAIN, 14));
-                        c.setForeground(Color.BLACK);
-                    }
-
-
-                    return c;
-                }
-            };
-            table.setFont(new Font("Arial", Font.PLAIN, 16));
-            table.setRowHeight(30); // each row 30px tall
-            table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
-
-
-            add(new JScrollPane(table)); // ✅ Add table to JFrame
-
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For debugging — remove in production
         } catch (Exception e) {
-            throw new RuntimeException();
+            JOptionPane.showMessageDialog(this, "Unexpected Error: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
+
+        // Improve table visuals
+        table.setFont(new Font("Arial", Font.PLAIN, 15));
+        table.setRowHeight(30);
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Row coloring based on transaction type
+        Font rowFont = new Font("Raleway", Font.PLAIN, 14);
+        Color depositColor = new Color(189, 250, 189);
+        Color withdrawColor = new Color(241, 177, 177);
+        Color defaultColor = Color.WHITE;
+
+        table = new JTable(model) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                String type = getValueAt(row, 1).toString();
+
+                if ("Deposit".equalsIgnoreCase(type)) {
+                    c.setBackground(depositColor);
+                } else if ("Withdrawal".equalsIgnoreCase(type)) {
+                    c.setBackground(withdrawColor);
+                } else {
+                    c.setBackground(defaultColor);
+                }
+
+                c.setFont(rowFont);
+                c.setForeground(Color.BLACK);
+                return c;
+            }
+        };
+
+        add(new JScrollPane(table), BorderLayout.CENTER);
+
+        // Add Close button at bottom
+        JButton closeButton = new JButton("Close");
+        closeButton.setFont(new Font("Arial", Font.BOLD, 14));
+        closeButton.addActionListener(e -> dispose());
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(closeButton);
+        add(bottomPanel, BorderLayout.SOUTH);
     }
 }

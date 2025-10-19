@@ -13,12 +13,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Deposit extends JFrame implements ActionListener {
-    String pinno ;
+    String cardno;
     JButton deposit,back;
     JTextField amount;
 
-    Deposit(String pinno){
-        this.pinno=pinno;
+    Deposit(String cardno){
+        this.cardno=cardno;
         setSize(845, 850);
         setLocation(375, 5);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // for proper exit
@@ -86,7 +86,6 @@ public class Deposit extends JFrame implements ActionListener {
     }
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == deposit) {
-            Conn c = new Conn();
             String cash = amount.getText();
             Date date1 = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("dd E yyyy HH:mm:ss");
@@ -105,22 +104,16 @@ public class Deposit extends JFrame implements ActionListener {
             }
             else {
                 try {
-                    // Ask for PIN confirmation
-                    String enteredPin = JOptionPane.showInputDialog(null, "Enter PIN to confirm:");
-                    if (enteredPin == null || !enteredPin.equals(pinno)) {
-                        JOptionPane.showMessageDialog(null, "Invalid PIN! Operation cancelled.");
-                    }
-                    else {
                         int balance = 0;
-                        String query1 = "SELECT * From transactions where pin= ?";
-                        String query2 = "INSERT INTO transactions (pin, date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
+                        String query1 = "SELECT * From transactions where cardno= ?";
+                        String query2 = "INSERT INTO transactions (cardno, date, type, amount,balance) VALUES (?, ?, ?, ?, ?)";
                         try (Connection conn = Conn.getConnection();
                              PreparedStatement ps1 = conn.prepareStatement(query1)) {
-                            ps1.setString(1, pinno);
+                            ps1.setString(1, cardno);
                             balance = getBalance(balance, ps1) + cashi;
 
                             PreparedStatement ps = conn.prepareStatement(query2);
-                            ps.setString(1, pinno);
+                            ps.setString(1, cardno);
                             ps.setString(2, date);  // or use SQL Date if your column is DATE type
                             ps.setString(3, "Deposit");
                             ps.setString(4, cash);
@@ -137,7 +130,7 @@ public class Deposit extends JFrame implements ActionListener {
                             if (choice == JOptionPane.YES_OPTION) {
                                 JOptionPane.showMessageDialog(null, STR."Your Balance is: Rs.\{balance}");
                             }
-                        }
+
                     }
 
                 } catch (Exception ex) {
@@ -148,7 +141,7 @@ public class Deposit extends JFrame implements ActionListener {
         }
         else if (e.getSource() == back) {
                 setVisible(false);
-                new Transcation(pinno).setVisible(true);
+                new Transcation(cardno).setVisible(true);
             }
 
         }

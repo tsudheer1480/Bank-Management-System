@@ -8,12 +8,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class BalanceEnquiry extends JFrame implements ActionListener {
-    String pinno ;
+    String cardno;
     JButton back;
     JLabel t1;
 
-    BalanceEnquiry(String pinno){
-        this.pinno=pinno;
+    BalanceEnquiry(String cardno){
+        this.cardno = cardno;
         setSize(845, 850);
         setLocation(375, 5);
         setLayout(null);
@@ -50,11 +50,11 @@ public class BalanceEnquiry extends JFrame implements ActionListener {
         back.addActionListener(this);
         bgImage.add(back);
 
-        String query = "SELECT * From transactions where pin= ? ";
+        String query = "SELECT * From transactions where cardno= ? ";
         int balance = 0;
         try (Connection conn = Conn.getConnection();
              PreparedStatement pst = conn.prepareStatement(query)) {
-                pst.setString(1, pinno);
+                pst.setString(1,cardno);
                balance=Deposit.getBalance(balance, pst);
                t1.setText(STR."Your Balance is Rs.\{balance}");
         } catch (Exception ex) {
@@ -72,7 +72,7 @@ public class BalanceEnquiry extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == back) {
             setVisible(false);
-            new Transcation(pinno).setVisible(true);
+            new Transcation(cardno).setVisible(true);
         }
 
     }

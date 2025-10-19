@@ -1,5 +1,7 @@
 package bankAtm;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -19,7 +21,10 @@ class SignupPhaseThree extends JFrame implements ActionListener {
         // generate 16-digit card number
         long cardno = Math.abs(rand.nextLong() % 900000000000L) + 5348875000000000L;
         int pin = rand.nextInt(900000) + 100000;
+        String pinStr = String.valueOf(pin);
 
+    // hash the pin using bcrypt
+        String hashedPin = BCrypt.hashpw(pinStr, BCrypt.gensalt(12)); // cost 12 is reasonable
         String cardStr = String.valueOf(cardno);
 
         // group into 4-4-4-4 format
@@ -200,19 +205,24 @@ class SignupPhaseThree extends JFrame implements ActionListener {
                     try (Connection conn = Conn.getConnection();
                          PreparedStatement ps = conn.prepareStatement(query1)) {
                         ps.setString(1, formno);
-                        ps.setString(2, String.valueOf(cardno));
-                        ps.setString(3, String.valueOf(pin));
+                        ps.setString(2, cardStr);
+                        ps.setString(3, hashedPin);
                         ps.setString(4, acc);
                         ps.setString(5, service);
                         ps.executeUpdate();
 
                         PreparedStatement ps2 = conn.prepareStatement(query2);
                         ps2.setString(1, formno);
-                        ps2.setString(2, String.valueOf(cardno));
-                        ps2.setString(3, String.valueOf(pin));
+                        ps2.setString(2, cardStr);
+                        ps2.setString(3, hashedPin);
                         ps2.executeUpdate();
                         JOptionPane.showMessageDialog(null, "Account Created");
-                        JOptionPane.showMessageDialog(null, MessageFormat.format("Save credentials \nCard NO :{0}\nPin :{1}", formatted, String.valueOf(pin)));
+                        JOptionPane.showMessageDialog(null,
+                                "Your CARD NO is:"+cardStr+
+                                "\nYour temporary PIN is: " + pinStr + "\nPlease change it immediately after login.",
+                                "PIN Generated",
+                                JOptionPane.INFORMATION_MESSAGE);
+
 
                         setVisible(false);
                         new Login().setVisible(true);
